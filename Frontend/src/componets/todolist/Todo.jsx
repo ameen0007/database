@@ -27,9 +27,10 @@ export const Todo = () => {
   }, []);
 
   const Fetchtodosfromserver = async () => {
-    const respone = await axios("https://todo-app-server-sooty.vercel.app/api/todo");
+    const respone = await axios("http://localhost:3000/api/todo");
     setTodosArray(respone.data);
-    console.log(todosArray, "setted");
+    console.log(todosArray, "Main array");
+    
   };
 
   //ADD NEW TODO//
@@ -41,17 +42,22 @@ export const Todo = () => {
         setInputSectionStatus(false);
       }, 800);
     } else {
-      const respone = await axios("https://todo-app-server-sooty.vercel.app/api/todo", {
+      const respone = await axios("http://localhost:3000/api/todo", {
         method: "POST",
         data: {
           userInputData: userInputData,
         },
       });
-
+        
+      const newtodo = respone.data
+      
       if (respone.data) {
-        setTodosArray(respone.data);
+        setTodosArray((prev)=>
+         [ ...prev, newtodo] )
+
         Fetchtodosfromserver();
         setUserInputData("");
+        
       }
     }
   };
@@ -60,28 +66,33 @@ export const Todo = () => {
   //TODO DELETE FUNCTION//
 
   const HandleDelete = async (TodoId) => {
-    const response = await axios("https://todo-app-server-sooty.vercel.app/api/todo", {
+     await axios("http://localhost:3000/api/todo", {
       method: "DELETE",
       data: {
-        todosArray: todosArray,
         TodoId: TodoId,
       },
     });
-    console.log(todosArray, "====frontend array");
-    setTodosArray(response.data);
+    Fetchtodosfromserver()
   };
   /---------------------------------------------------------------------------------------/;
   //TODO COMPLETE
 
   const HandleComplete = async (TodoId) => {
-    const respone = await axios("https://todo-app-server-sooty.vercel.app/api/todos/complete", {
+    const respone = await axios("http://localhost:3000/api/todos/complete", {
       method: "PUT",
       data: {
         TodoId: TodoId,
       },
     });
     console.log(respone.data, "data ");
-    setTodosArray(respone.data);
+    const findtotostatus = todosArray.findIndex((todo)=> todo._id === TodoId)
+     if (findtotostatus !== -1){
+       
+      const updatedTodosArray = [...todosArray]
+  
+      updatedTodosArray[findtotostatus].status = respone.data.status
+    setTodosArray(updatedTodosArray);
+     }
   };
 
   /-------------------------------------------------------------------------------------/;
@@ -93,12 +104,12 @@ export const Todo = () => {
     } else {
       setEditButtonStatus(TodoId);
       const userclikedtodo = todosArray.find(
-        (Tododata) => Tododata.id === TodoId
+        (Tododata) => Tododata._id === TodoId
       );
       setEditedInputValues({
-        [TodoId]: userclikedtodo.TodoList,
-      });
+        [TodoId] : userclikedtodo.todos  })
     }
+    
   };
 
   /-----------------------------------------------------------------------------------/;
@@ -113,18 +124,32 @@ export const Todo = () => {
   //TODO EDIT SAVE SECTION//
 
   const HandleSave = async (TodoId) => {
-    const respone = await axios("https://todo-app-server-sooty.vercel.app/api/todo", {
+    const editedvalue = editedInputValues[TodoId]
+    console.log(editedvalue,"value?");
+    const respone = await axios("http://localhost:3000/api/todo", {
       method: "PUT",
       data: {
         TodoId: TodoId,
-        editedInputValues: editedInputValues,
+        editedvalue:editedvalue,
       },
     });
     console.log(respone.data, "==response data");
-    setTodosArray(respone.data);
+    
+    const todoIndex = todosArray.findIndex((todo) => todo._id === TodoId);
+
+  if (todoIndex !== -1) {
+    
+    const updatedTodo = respone.data.todos
+    const updatedTodosArray = [...todosArray];
+    updatedTodosArray[todoIndex].todos = updatedTodo;
+
+   
+    setTodosArray(updatedTodosArray);
+  }
+     
     setEditButtonStatus("");
   };
-
+   
   /---------------------------------------------------------------------------------------/;
   // TODO CHANGED VALUE HANDLING SECTION //
 
@@ -148,22 +173,22 @@ export const Todo = () => {
           />
           {/* ----------------------------------------------------------------- */}
           {todosArray.map((Tododata) => (
-            <div className="list-container" key={Tododata.id}>
+            <div className="list-container" key={Tododata._id}>
               {/*----------------------------------------------------------------*/}
 
-              {editButtonStatus != null && editButtonStatus === Tododata.id ? (
+              {editButtonStatus != null && editButtonStatus === Tododata._id ? (
                 <div className="error-maindiv">
                   <div className="input-div2">
                     <input
                       type="text"
-                      value={editedInputValues[Tododata.id] || ""}
+                      value={editedInputValues[Tododata._id] || ""}
                       onChange={(event) =>
-                        HandleInputChange(Tododata.id, event.target.value)
+                        HandleInputChange(Tododata._id, event.target.value)
                       }
                     />
                   </div>
                   <div className="save-btn">
-                    <button onClick={() => HandleSave(Tododata.id)}>
+                    <button onClick={() => HandleSave(Tododata._id)}>
                       Save
                     </button>
                   </div>
@@ -176,20 +201,20 @@ export const Todo = () => {
                 //  ------------------------------
                 <>
                   <div
-                    onClick={() => HandleComplete(Tododata.id)}
+                    onClick={() => HandleComplete(Tododata._id)}
                     id={Tododata.status ? "listcomplete" : ""}
                     className="text"
                   >
-                    <p>{Tododata.TodoList}</p>
+                    <p>{Tododata.todos}</p>
                   </div>
                   <button
                     className="img1"
-                    onClick={() => HandleEdit(Tododata.id)}
+                    onClick={() => HandleEdit(Tododata._id)}
                   >
                     <img src="image 7.png" alt="" />
                   </button>
                   <button
-                    onClick={() => HandleDelete(Tododata.id)}
+                    onClick={() => HandleDelete(Tododata._id)}
                     className="img2"
                   >
                     <img src="image 9.png" alt="" />

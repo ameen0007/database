@@ -14,11 +14,11 @@ connectdb()
 // let todos = [];
 
 
-app.get("/api/todo",async (req, res) => {
+app.get("/api/todo", async (req, res) => {
   
   const todos = await Todo.find()
   res.json(todos);
-  
+  console.log(todos);
 });
 
 
@@ -38,56 +38,67 @@ app.post("/api/todo", async (req, res) => {
     status: false,
   }
 
-  await Todo.create(newtodo)
-  console.log(Todo,"todo");
-  res.json({
-    message : "data added"
-  });
- 
+  const postdata = await Todo.create(newtodo)
+  res.json(postdata);
+  
 });
 
 
 
-// app.put("/api/todo", (req, res) => {
-//   const { editedInputValues, TodoId } = req.body;
-
-//   const wanteddata = ["editedInputValues", "TodoId"];
-
-//   checkwanteditems(wanteddata, req.body, res);
-
-//   const index = todos.findIndex((todo) => todo.id === TodoId);
-
-//   todos[index].TodoList = editedInputValues[TodoId];
-//   res.json(todos);
-// });
+app.put("/api/todo", async (req, res) => {
+  const { editedvalue, TodoId } = req.body;
 
 
+ const fields = {
+   todos : editedvalue,
+   status : false
+ }
+ console.log("TodoId",TodoId);
+ console.log("editedInputValues:", editedvalue);
 
 
-// app.put("/api/todos/complete", (req, res) => {
-//   const { TodoId } = req.body;
-//   const wanteddata = ["TodoId"];
-//   checkwanteditems(wanteddata, req.body, res);
-//   const index = todos.findIndex((todo) => todo.id === TodoId);
-
-//   todos[index].status = !todos[index].status;
-
-//   console.log(todos, "===after status");
-//   res.json(todos);
-// });
+  const updatedata = await Todo.findByIdAndUpdate(TodoId,fields, { new: true });
+  console.log(updatedata,"updateddata");
+  res.json(updatedata)
+});
 
 
 
-// app.delete("/api/todo", (req, res) => {
-//   const { todosArray, TodoId } = req.body;
-//   const wanteddata = ["todosArray", "TodoId"];
-//   checkwanteditems(wanteddata, req.body, res);
-//   const newarray = todosArray.filter((data) => data.id !== TodoId);
 
-//   todos = newarray;
-//   res.json(todos);
-//   console.log(todos, "==main todos array");
-// });
+app.put("/api/todos/complete", async (req, res) => {
+  const { TodoId } = req.body;
+
+
+  const todo = await Todo.findById(TodoId)
+
+  todo.status = !todo.status
+
+  const updatedata = await todo.save()
+   
+  
+res.json(updatedata)
+  console.log("aaaaaa",updatedata,"aaaaaa");
+});
+
+
+
+app.delete("/api/todo", async (req, res) => {
+  const { TodoId } = req.body;
+
+  // const wanteddata = ["todosArray", "TodoId"];
+  // checkwanteditems(wanteddata, req.body, res);
+  // const newarray = todosArray.filter((data) => data.id !== TodoId);
+
+  // todos = newarray;
+  // res.json(todos);
+  // console.log(todos, "==main todos array");
+   
+  const deleted = await Todo.findByIdAndDelete(TodoId)
+
+   res.json(deleted)
+   
+});
+
 
 
  
